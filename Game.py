@@ -11,6 +11,7 @@ import pygame
 from pygame.locals import *
 import sys
 import random
+import time
 
 pygame.init()
 vec = pygame.math.Vector2
@@ -37,6 +38,7 @@ class Player(pygame.sprite.Sprite):
         self.surf.fill((128,255,40))
         self.rect = self.surf.get_rect()
         self.jumping = False
+        self.score = 0
 
         self.pos = vec((10, 360))
         self.vel = vec(0,0)
@@ -78,9 +80,12 @@ class Player(pygame.sprite.Sprite):
         if self.vel.y > 0:
             if hits:
                 if self.pos.y < hits[0].rect.bottom:
-                    self.pos.y = hits[0].rect.top + 1
-                    self.vel.y = 0
-                    self.jumping = False
+                  if hits[0].point == True:
+                      hits[0].point = False
+                      self.score += 1
+                self.pos.y = hits[0].rect.top + 1
+                self.vel.y = 0
+                self.jumping = False
                 
 #==================
 # Game World Class
@@ -92,6 +97,8 @@ class platform(pygame.sprite.Sprite):
         self.surf.fill((255,0,0))
         self.rect = self.surf.get_rect(center = (random.randint(0,WIDTH-10),
                                                  random.randint(0, HEIGHT-30)))
+        self.moving = True
+        self.point = True
 
     def move(self):
         pass
@@ -129,6 +136,9 @@ PT1.surf = pygame.Surface((WIDTH, 20))
 PT1.surf.fill((255,0,0))
 PT1.rect = PT1.surf.get_rect(center = (WIDTH/2, HEIGHT - 10))
 
+PT1.moving = False
+PT1.point = False
+
 all_sprites = pygame.sprite.Group()
 all_sprites.add(PT1)
 all_sprites.add(P1)
@@ -160,12 +170,18 @@ while True:
             if event.key == pygame.K_SPACE:
                 P1.cancel_jump()
 
-        if P1.rect.top <= HEIGHT / 3:
-            P1.pos.y += abs(P1.vel.y)
-            for plat in platforms:
-                plat.rect.y += abs(P1.vel.y)
-                if plat.rect.top >= HEIGHT:
-                    plat.kill()
+        if P1.rect.top <= HEIGHT:
+            for entity in all_sprites:
+                entity.kill()
+                time.sleep(1)
+                displaySurface.fill((0,0,0))
+                f = pygame.font.SysFont("Verdana", 20)
+                g = f.render(str(P1.score), True, (123,255,0))
+                displaySurface.blit(g, (WIDTH/2, 10))
+                pygame.display.update()
+                time.sleep(1)
+                pygame.quit()
+                sys.exit()
 
     displaySurface.fill((0,0,0))
     P1.update()
